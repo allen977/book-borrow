@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二维码生成工具</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: #fff;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+            text-align: center;
+        }
+        h1 { font-size: 22px; color: #333; margin-bottom: 8px; }
+        p { font-size: 14px; color: #888; margin-bottom: 24px; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; font-size: 14px; font-weight: 600; color: #555; margin-bottom: 8px; }
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input:focus { border-color: #667eea; }
+        button {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        button:active { transform: scale(0.98); }
+        #qrcode-result {
+            margin-top: 24px;
+            padding: 20px;
+            background: #f8f8f8;
+            border-radius: 12px;
+            display: none;
+        }
+        #qrcode-result.show { display: block; }
+        #qrcode-img { margin: 0 auto; }
+        .tip {
+            margin-top: 16px;
+            padding: 14px;
+            background: #fff3cd;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #856404;
+            text-align: left;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 借书系统二维码生成</h1>
+        <p>输入借书网页的访问地址，生成二维码</p>
+        
+        <div class="input-group">
+            <label>网页地址（URL）</label>
+            <input type="url" id="url-input" placeholder="https://your-domain.com/book-borrow-system/index.html">
+        </div>
+        
+        <button onclick="generate()">生成二维码</button>
+        
+        <div id="qrcode-result">
+            <div id="qrcode-img"></div>
+            <p style="margin-top: 12px; margin-bottom: 0; color: #666; font-size: 13px;">扫码即可访问借书页面</p>
+        </div>
+
+        <div class="tip">
+            💡 <strong>使用提示：</strong><br>
+            1. 将 index.html 部署到服务器或静态托管平台<br>
+            2. 把访问地址粘贴到上方输入框<br>
+            3. 生成二维码后打印出来贴在书架上<br>
+            4. 用户扫码即可借书/还书
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <script>
+        function generate() {
+            const url = document.getElementById('url-input').value.trim();
+            if (!url) {
+                alert('请输入网页地址');
+                return;
+            }
+            const qr = qrcode(0, 'M');
+            qr.addData(url);
+            qr.make();
+            document.getElementById('qrcode-img').innerHTML = qr.createImgTag(8, 10);
+            document.getElementById('qrcode-result').classList.add('show');
+        }
+    </script>
+</body>
+</html>

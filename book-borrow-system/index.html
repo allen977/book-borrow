@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>扫码借书系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* 顶部导航 */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #fff;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* Tab 切换 */
+        .tab-bar {
+            display: flex;
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            border: none;
+            background: transparent;
+            color: rgba(255,255,255,0.7);
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: #fff;
+            color: #667eea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .card.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-title {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 24px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #667eea;
+        }
+
+        .form-group select {
+            background: #f8f8f8;
+            cursor: pointer;
+        }
+
+        /* 按钮 */
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+        }
+
+        .btn-borrow {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+
+        .btn-borrow:active {
+            transform: scale(0.98);
+        }
+
+        .btn-return {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: #fff;
+        }
+
+        .btn-return:active {
+            transform: scale(0.98);
+        }
+
+        /* 提示信息 */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: rgba(0,0,0,0.85);
+            color: #fff;
+            padding: 20px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            text-align: center;
+            max-width: 80%;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state p {
+            font-size: 15px;
+        }
+
+        /* 还书列表 */
+        .book-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .book-item:active {
+            transform: scale(0.98);
+        }
+
+        .book-item.selected {
+            border-color: #11998e;
+            background: #f0fdf4;
+        }
+
+        .book-info {
+            flex: 1;
+        }
+
+        .book-info .book-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .book-info .borrower {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .book-info .borrow-date {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 2px;
+        }
+
+        .radio-btn {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            margin-left: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .book-item.selected .radio-btn {
+            border-color: #11998e;
+            background: #11998e;
+        }
+
+        .book-item.selected .radio-btn::after {
+            content: '✓';
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* 记录列表 */
+        .records-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #eee;
+        }
+
+        .records-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 16px;
+        }
+
+        .record-item {
+            background: #f8f8f8;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+        }
+
+        .record-item .r-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .record-item .r-book {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .record-item .r-status {
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .r-status.borrowed {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .r-status.returned {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .record-item .r-detail {
+            font-size: 12px;
+            color: #888;
+            line-height: 1.6;
+        }
+
+        /* 二维码区域 */
+        .qrcode-section {
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+        }
+
+        .qrcode-section p {
+            color: rgba(255,255,255,0.9);
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        #qrcode {
+            display: inline-block;
+            padding: 12px;
+            background: #fff;
+            border-radius: 8px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: rgba(255,255,255,0.6);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>📚 扫码借书系统</h1>
+            <p>扫一扫，轻松借书还书</p>
+        </div>
+
+        <!-- Tab 切换 -->
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab('borrow')">📖 借书</button>
+            <button class="tab-btn" onclick="switchTab('return')">📗 还书</button>
+            <button class="tab-btn" onclick="switchTab('records')">📋 记录</button>
+        </div>
+
+        <!-- 借书卡片 -->
+        <div class="card active" id="borrow-card">
+            <div class="card-title">📖 借书登记</div>
+            <div class="form-group">
+                <label>姓名</label>
+                <input type="text" id="borrower-name" placeholder="请输入您的姓名">
+            </div>
+            <div class="form-group">
+                <label>手机号</label>
+                <input type="tel" id="borrower-phone" placeholder="请输入手机号" maxlength="11">
+            </div>
+            <div class="form-group">
+                <label>书名</label>
+                <input type="text" id="book-name" placeholder="请输入要借的书名">
+            </div>
+            <div class="form-group">
+                <label>借书时间</label>
+                <input type="datetime-local" id="borrow-time">
+            </div>
+            <button class="btn btn-borrow" onclick="borrowBook()">确认借书</button>
+        </div>
+
+        <!-- 还书卡片 -->
+        <div class="card" id="return-card">
+            <div class="card-title">📗 还书登记</div>
+            <div id="borrowed-books-list">
+                <!-- 动态生成借书列表 -->
+            </div>
+            <button class="btn btn-return" onclick="returnBook()" id="return-btn" style="display:none;">确认还书</button>
+        </div>
+
+        <!-- 记录卡片 -->
+        <div class="card" id="records-card">
+            <div class="card-title">📋 借阅记录</div>
+            <div id="records-list">
+                <!-- 动态生成记录列表 -->
+            </div>
+        </div>
+
+        <!-- 二维码区域 -->
+        <div class="qrcode-section">
+            <p>📱 将此二维码分享给他人扫码借书</p>
+            <div id="qrcode"></div>
+        </div>
+
+        <div class="footer">
+            <p>扫码借书系统 v1.0</p>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 引入 qrcode.js -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <script>
+        // ========== 数据存储 ==========
+        const STORAGE_KEY = 'bookBorrowSystem';
+
+        function getData() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : { records: [] };
+        }
+
+        function saveData(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        // ========== Tab 切换 ==========
+        function switchTab(tab) {
+            // 切换按钮状态
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // 切换卡片
+            document.querySelectorAll('.card').forEach(card => card.classList.remove('active'));
+            document.getElementById(tab + '-card').classList.add('active');
+
+            // 刷新对应内容
+            if (tab === 'return') {
+                loadBorrowedBooks();
+            } else if (tab === 'records') {
+                loadRecords();
+            }
+        }
+
+        // ========== 借书功能 ==========
+        function borrowBook() {
+            const name = document.getElementById('borrower-name').value.trim();
+            const phone = document.getElementById('borrower-phone').value.trim();
+            const bookName = document.getElementById('book-name').value.trim();
+            const borrowTime = document.getElementById('borrow-time').value;
+
+            // 验证
+            if (!name) {
+                showToast('请输入姓名');
+                return;
+            }
+            if (!phone) {
+                showToast('请输入手机号');
+                return;
+            }
+            if (!/^1\d{10}$/.test(phone)) {
+                showToast('请输入正确的手机号');
+                return;
+            }
+            if (!bookName) {
+                showToast('请输入书名');
+                return;
+            }
+            if (!borrowTime) {
+                showToast('请选择借书时间');
+                return;
+            }
+
+            // 保存数据
+            const data = getData();
+            const record = {
+                id: Date.now(),
+                name: name,
+                phone: phone,
+                bookName: bookName,
+                borrowTime: borrowTime,
+                returnTime: null,
+                status: 'borrowed' // borrowed: 已借出, returned: 已归还
+            };
+            data.records.push(record);
+            saveData(data);
+
+            // 清空表单
+            document.getElementById('book-name').value = '';
+            // 不清空姓名和手机号，方便连续借书
+
+            showToast('✅ 借书成功！');
+            loadRecords();
+        }
+
+        // ========== 还书功能 ==========
+        let selectedBookId = null;
+
+        function loadBorrowedBooks() {
+            const data = getData();
+            const borrowedBooks = data.records.filter(r => r.status === 'borrowed');
+            const listContainer = document.getElementById('borrowed-books-list');
+            const returnBtn = document.getElementById('return-btn');
+
+            selectedBookId = null;
+            returnBtn.style.display = 'none';
+
+            if (borrowedBooks.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>当前没有未归还的书籍</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listContainer.innerHTML = borrowedBooks.map(book => `
+                <div class="book-item" onclick="selectBook(${book.id})" id="book-item-${book.id}">
+                    <div class="book-info">
+                        <div class="book-name">📖 ${escapeHtml(book.bookName)}</div>
+                        <div class="borrower">借阅人：${escapeHtml(book.name)}（${book.phone}）</div>
+                        <div class="borrow-date">借书时间：${formatDateTime(book.borrowTime)}</div>
+                    </div>
+                    <div class="radio-btn"></div>
+                </div>
+            `).join('');
+        }
+
+        function selectBook(id) {
+            // 取消之前的选择
+            if (selectedBookId) {
+                const prevItem = document.getElementById('book-item-' + selectedBookId);
+                if (prevItem) prevItem.classList.remove('selected');
+            }
+
+            // 选中当前
+            selectedBookId = id;
+            document.getElementById('book-item-' + id).classList.add('selected');
+            document.getElementById('return-btn').style.display = 'block';
+        }
+
+        function returnBook() {
+            if (!selectedBookId) {
+                showToast('请选择要归还的书籍');
+                return;
+            }
+
+            const data = getData();
+            const record = data.records.find(r => r.id === selectedBookId);
+            if (record) {
+                record.status = 'returned';
+                record.returnTime = new Date().toISOString().slice(0, 16);
+                saveData(data);
+                showToast('✅ 还书成功！感谢归还');
+                loadBorrowedBooks();
+                loadRecords();
+            }
+        }
+
+        // ========== 记录列表 ==========
+        function loadRecords() {
+            const data = getData();
+            const records = data.records.slice().reverse(); // 最新的在前
+            const listContainer = document.getElementById('records-list');
+
+            if (records.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>暂无借阅记录</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listContainer.innerHTML = records.map(record => `
+                <div class="record-item">
+                    <div class="r-header">
+                        <span class="r-book">📖 ${escapeHtml(record.bookName)}</span>
+                        <span class="r-status ${record.status}">
+                            ${record.status === 'borrowed' ? '借阅中' : '已归还'}
+                        </span>
+                    </div>
+                    <div class="r-detail">
+                        借阅人：${escapeHtml(record.name)}（${record.phone}）<br>
+                        借书时间：${formatDateTime(record.borrowTime)}
+                        ${record.returnTime ? '<br>还书时间：' + formatDateTime(record.returnTime) : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ========== 工具函数 ==========
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        function formatDateTime(dateTimeStr) {
+            if (!dateTimeStr) return '-';
+            const date = new Date(dateTimeStr);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hour = String(date.getHours()).padStart(2, '0');
+            const minute = String(date.getMinutes()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hour}:${minute}`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ========== 初始化 ==========
+        function init() {
+            // 设置默认借书时间为当前时间
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('borrow-time').value = now.toISOString().slice(0, 16);
+
+            // 生成二维码
+            generateQRCode();
+
+            // 加载记录
+            loadRecords();
+        }
+
+        function generateQRCode() {
+            const qr = qrcode(0, 'M');
+            // 使用当前页面的 URL 作为二维码内容
+            const url = window.location.href;
+            qr.addData(url);
+            qr.make();
+            document.getElementById('qrcode').innerHTML = qr.createImgTag(6, 8);
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
